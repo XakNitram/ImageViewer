@@ -2,17 +2,16 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter.filedialog import askdirectory, asksaveasfilename
 import tkexpanded as tke
-import asyncio
-# import logging
 from time import time
 from math import ceil
 from typing import (
-    List, Optional, Tuple, Union, ClassVar,
+    List, Optional, Tuple, ClassVar,
     Dict, TypeVar, Hashable, Mapping,
 )
 from itertools import count
-from collections import defaultdict, OrderedDict
-import os, sys
+from collections import OrderedDict
+import asyncio
+import os
 from PIL import Image
 from PIL import ImageFile
 from PIL.ImageTk import PhotoImage
@@ -889,56 +888,6 @@ class ImageContainer(tke.PageBase):
 
             tkimage = await self.loop.run_in_executor(None, image.convert, "RGBA")
             await asyncio.sleep(0)
-
-    def show_regular_new(self):
-        pass
-
-    async def show_gif_new(self, name: str, rotation: int):
-        # Check if the gif is already loaded
-        loaded = self.gif_cache.get(name)
-        if loaded is not None:
-            await self.loop.create_task(
-                self.play_animation(
-                    self.gif_cache.get(name)
-                )
-            )
-            return
-
-        # Start loading gif task
-        loading = self.play_animation(
-            self.loading_gif
-        )
-
-        # Create animation
-        animation = Animation(self.canvas)
-        self.gif_cache[name] = animation
-
-        # Show loading gif
-        task = await self.loop.create_task(loading)
-
-        # Wait for loading to finish
-        await animation.loader(name, rotation, self.loop)
-
-        # Cancel showing the loading gif
-        task.cancel()
-        await asyncio.gather(task, loop=self.loop)
-
-        # Show the gif
-        await self.loop.create_task(
-            self.play_animation(
-                animation
-            )
-        )
-
-    def show_new(self, index, rotate):
-        imgname = self.get_image_path(index)
-
-        if index != self.current_index or self.current_image_edited is None:
-            if imgname is None:
-                self.canvas.delete("text")
-                return
-        else:
-            image = self.current_image_edited
 
     def show(self, cur_index: int = 0, index: int = 0, rotate: int = 0):
         """Show the image at the given index.
