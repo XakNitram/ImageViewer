@@ -776,8 +776,6 @@ class ImageContainer(tke.PageBase):
         frame_queue = asyncio.Queue()
         total_frames = 0
 
-        # core: Dict[int, PhotoImage] = {}
-
         tasks: List[asyncio.Task] = []
         try:
 
@@ -785,10 +783,10 @@ class ImageContainer(tke.PageBase):
                 self.progress_bar.grid()
             else:
                 loading_task = self.loop.create_task(
-                    self.repeat_gif(self.loading_gif, self.loading_gif_delay)
+                    self.play_animation(self.loading_gif)
                 )
 
-            for i in range(25):
+            for i in range(5):
                 # load frames
                 task = asyncio.create_task(
                     self.frame_loader(frame_queue, cache, w, h, rotate)
@@ -831,7 +829,11 @@ class ImageContainer(tke.PageBase):
         return cache
 
     async def show_gif(self, image, name, delay, rotate):
-        cache = self.gif_cache[name]
+        cache = self.gif_cache.get(name)
+        if cache is None:
+            cache = Animation(self.canvas)
+            self.gif_cache[name] = cache
+
         if cache.finished_loading:
             frames = cache
         else:
