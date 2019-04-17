@@ -48,6 +48,9 @@ def enable_logging(level: int = logging.DEBUG):
 
 
 class Output(tk.Text):
+    # TODO: Make the 'display' method return the name of a mark that
+    #   the user can use to refer back to the text they inserted.
+
     def __init__(self, master: TkContainer=None, **kwargs) -> None:
         # ****** Main Container Definition******
         self.frame = ttk.Frame(master)
