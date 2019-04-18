@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter.filedialog import askdirectory, asksaveasfilename
 import tkexpanded as tke
+from tkexpanded.variables import ObjectVar, VariableDict
 from time import time
 from math import ceil
 from typing import (
@@ -336,6 +337,7 @@ class ImageViewerApp(tke.ApplicationBase):
         # style.theme_use("clam")
 
         settings = tke.VariableDict.from_mapping(self.globals, "globals", self)
+        settings["root"]: ObjectVar[tk.Tk] = ObjectVar(self, "root", self)
 
         self.pages = tke.PageMaster(self)
         self.pages.pack(expand=True, fill="both")
@@ -385,6 +387,7 @@ class ImageContainer(tke.PageBase):
 
         # ****** Assign Parameters ******
         self.settings = settings
+        self.root = settings.get_true("root")
         self.height = height
         self.width = width
         self.loop = loop
@@ -629,7 +632,7 @@ class ImageContainer(tke.PageBase):
         """Internal Function. Does not have to be rewritten
         by subclasses."""
         self.settings["source"].set(path)
-        self.master.master.title("Images")
+        self.root.title("Images")
 
         # if I'm clicking "load", I don't care
         # if it's the same directory.
