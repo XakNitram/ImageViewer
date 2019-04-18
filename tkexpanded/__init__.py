@@ -694,20 +694,21 @@ class PageMaster(ttk.Frame):
     def __init__(self, master: "ApplicationBase", **kwargs):
         super(PageMaster, self).__init__(master, **kwargs)
 
-        self.pages: tp.Dict[str, "PageBase"] = {}
-        self.indices: tp.Dict[str, tp.Tuple[int, int]] = {}
-        self.matrix: tp.Dict[int, tp.Dict[int, str]] = defaultdict(dict)
+        self.pages: tp.Dict[tp.Hashable, "PageBase"] = {}
+        self.indices: tp.Dict[tp.Hashable, tp.Tuple[int, int]] = {}
+        self.matrix: tp.Dict[int, tp.Dict[int, tp.Hashable]] = defaultdict(dict)
 
-    def __getitem__(self, item: str) -> "PageBase":
-        if item not in self.page_names():
-            raise KeyError("Page " + item + " has not been registered.")
-        return self.pages[item]
+    # ****** Setup PageMaster as Dict ******
+    def __getitem__(self, name: tp.Hashable) -> "PageBase":
+        if name not in self.names():
+            raise KeyError("Page " + str(name) + " has not been registered.")
+        return self.pages[name]
 
-    def __setitem__(self, key: str, value: tp.Tuple[tp.Type["PageBase"], int, int]):
-        cont, row, col = value
-        self.page_register(cont, key, row, col)
-
-    def page_register(self, cont: tp.Type["PageBase"], name: str, row: int, column: int, *args, **kwargs) -> None:
+    # ****** Page System ******
+    def register(
+            self, cont: tp.Type["PageBase"], name: tp.Hashable, row: int,
+            column: int, *args, **kwargs
+    ) -> None:
         """Register a page with the PageMaster."""
         if type(cont) is type:
             page = cont(self, *args, **kwargs)
@@ -719,23 +720,23 @@ class PageMaster(ttk.Frame):
         self.rowconfigure(row, weight=1)
         self.columnconfigure(column, weight=1)
 
-    def page_names(self) -> tp.Tuple[str, ...]:
+    def names(self) -> tp.Tuple[tp.Hashable, ...]:
         """Return a tuple of the names of all registered pages."""
         return tuple(self.pages.keys())
 
-    def page_forget(self, *names: str) -> None:
+    def forget(self, *names: str) -> None:
         """Forget all pages in :param names:"""
         for key in names:
-            page = self.pages[key]
+            page = self[key]
             if page.active:
                 page.exit()
                 page.active = False
             page.grid_forget()
 
-    def page_show(self, name: str, row=None, col=None, **kwargs) -> None:
+    def show(self, name: tp.Hashable, row=None, col=None, **kwargs) -> None:
         """Display the given page"""
         try:
-            page = self.pages[name]
+            page = self[name]
             if row is None and col is None:
                 row, col = self.indices[name]
             elif row is None:
@@ -746,7 +747,7 @@ class PageMaster(ttk.Frame):
             # check to see if the page covers another
             try:
                 cur_page_name: str = self.matrix[row][col]
-                cur_page: PageBase = self.pages[cur_page_name][0]
+                cur_page: PageBase = self[cur_page_name][0]
                 if hasattr(page, "exit"):
                     if cur_page.active:
                         cur_page.exit()
@@ -763,14 +764,15 @@ class PageMaster(ttk.Frame):
             page.tkraise()
             page.active = True
         except KeyError:
-            raise KeyError("Page " + name + " has not been registered.")
+            raise KeyError("Page " + str(name) + " has not been registered.")
 
-    def page_configure(self, name: str, cnf: tp.Dict=None, **kwargs) -> None:
-        """Configure the tag :param name:"""
-        if cnf is None:
-            cnf = {}
-        self.pages[name].configure(cnf, **kwargs)
+    def get(self, name: tp.Hashable, default=None):
+        try:
+            return self[name]
+        except KeyError:
+            return default
 
+    # ****** Overwritten Methods ******
     def destroy(self):
         root_logger.debug("Destroying Page Master")
         try:
@@ -783,19 +785,44 @@ class PageMaster(ttk.Frame):
         except tk.TclError:
             raise tk.TclError("A widget was destroyed, then it was referenced in a function call.")
 
+    # ****** Command System ******
+    def message(self, name: tp.Hashable, command: tp.Hashable, *args, **kwargs):
+        """Every instance of PageBase has a reference to its master,
+        so we can possibly use this fact to send messages to pages
+        instead of being sneaky with the Variable traces."""
+        self[name].dispatch(command, *args, **kwargs)
+
 
 class PageBase(ttk.Frame):
     __slots__ = ("active", "master")
     """Abstract Base Class for Page types"""
-    def __init__(self, master: "PageMaster", **kwargs) -> None:
+    def __init__(self, master: PageMaster, *args, **kwargs) -> None:
         super(PageBase, self).__init__(master, **kwargs)
 
         # ****** Attribute Definition ******
         self.master = master
         self.active = False
 
+        # ****** Command System ******
+        self._commands: tp.Dict[tp.Hashable, tp.Callable[[], None]] = {}
+
+        # ****** Page Initialization ******
         self.create()
 
+    # ****** Command System ******
+    def dispatch(self, command: tp.Hashable, *args, **kwargs):
+        self._commands[command](*args, **kwargs)
+
+    def command_add(self, name: tp.Hashable, func: tp.Callable[[], None]):
+        self._commands[name] = func
+
+    def command_remove(self, name: tp.Hashable):
+        del self._commands[name]
+
+    def command_names(self):
+        return self._commands.keys()
+
+    # ****** Page System ******
     def create(self):
         """Creates the pages's widgets."""
         pass
@@ -808,15 +835,9 @@ class PageBase(ttk.Frame):
         """Will be called every time this page is hidden."""
         pass
 
+    # ****** Overwritten Methods ******
     def destroy(self) -> None:
         super().destroy()
-
-    # def __del__(self) -> None:
-    #     """"""
-    #     # why not self.__destroy()?
-    #     # because we want this method to be
-    #     # overwritten by subclasses
-    #     self.destroy()
 
 
 class ApplicationBase(tk.Tk):

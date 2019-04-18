@@ -341,7 +341,7 @@ class ImageViewerApp(tke.ApplicationBase):
         self.pages.pack(expand=True, fill="both")
 
         # ****** Register Pages ******
-        self.pages.page_register(
+        self.pages.register(
             ImageContainer, "container", 1, 0, loop, settings,
             highlight=blue_grey, background=blue_grey
             # highlight="white", background="white"
@@ -349,7 +349,7 @@ class ImageViewerApp(tke.ApplicationBase):
         # self.pages.page_register(
         #     SelectionPage, "selection", 0, 0, settings
         # )
-        self.pages.page_register(
+        self.pages.register(
             SelectionPage, "selection", 2, 0, settings
         )
 
@@ -359,8 +359,8 @@ class ImageViewerApp(tke.ApplicationBase):
         self.pages["selection"].rowconfigure(0, weight=0)
 
         # ****** Show Pages ******
-        self.pages.page_show("container", columnspan=3)
-        self.pages.page_show("selection")
+        self.pages.show("container", columnspan=3)
+        self.pages.show("selection")
 
 
 class ImageContainer(tke.PageBase):
@@ -431,9 +431,8 @@ class ImageContainer(tke.PageBase):
         self.configuring = False
         self.last_configure = time()
 
-        source_var: tk.Variable = settings["source"]
-        source_var.trace_add("write", self.update_source)
-        self.current_source = source_var.get()
+        self.command_add("<<UpdateSource>>", self.update_source)
+        self.current_source = settings.get_true("source")
 
         # ****** Configuring ******
         self.columnconfigure(0, weight=1)
@@ -626,26 +625,26 @@ class ImageContainer(tke.PageBase):
         """Internal Function. Has to be rewritten by subclasses."""
         return os.path.isdir(source)
 
-    def update_source(self, *args):
+    def update_source(self, path: str):
         """Internal Function. Does not have to be rewritten
         by subclasses."""
-        value = self.settings.get_true("source")
+        self.settings["source"].set(path)
 
         # if I'm clicking "load", I don't care
         # if it's the same directory.
         # if value == self.current_source:
         #     return
 
-        if self.is_good_source(value):
-            images = self.load_images(value)
+        if self.is_good_source(path):
+            images = self.load_images(path)
             # if len(images) > 0:
             self.images = images
-            if value != self.current_source:
+            if path != self.current_source:
                 self.gif_cache.clear()
                 self.reload_context()
                 self.current_index = 0
                 self.current_image_unedited = None
-            self.current_source = value
+            self.current_source = path
             self.show(self.current_index, self.current_index, self.current_rotation)
 
     def load_images(self, folder: str) -> List[str]:
@@ -988,8 +987,14 @@ class SelectionPage(tke.PageBase):
         fl.pack(side="right", padx=5)
 
     def set_source(self, event=None):
+        # source = self.source.get()
+        # self.settings.get("source").set(source)
+
         source = self.source.get()
-        self.settings.get("source").set(source)
+        self.master.message(
+            "container", "<<UpdateSource>>",
+            source
+        )
 
     def browse(self, event=None):
         back = self.source.get()
