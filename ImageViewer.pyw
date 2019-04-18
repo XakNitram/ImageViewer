@@ -629,6 +629,7 @@ class ImageContainer(tke.PageBase):
         """Internal Function. Does not have to be rewritten
         by subclasses."""
         self.settings["source"].set(path)
+        self.master.master.title("Images")
 
         # if I'm clicking "load", I don't care
         # if it's the same directory.
