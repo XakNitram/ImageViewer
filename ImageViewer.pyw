@@ -336,7 +336,7 @@ class ImageViewerApp(tke.ApplicationBase):
         style.configure("TSeparator", background=blue_grey)
         # style.theme_use("clam")
 
-        settings = tke.VariableDict.from_mapping(self.globals, "globals", self)
+        settings = VariableDict.from_mapping(self.globals, "globals", self)
         settings["root"]: ObjectVar[tk.Tk] = ObjectVar(self, "root", self)
 
         self.pages = tke.PageMaster(self)
@@ -376,7 +376,7 @@ class ImageContainer(tke.PageBase):
 
     def __init__(
             self, master: tke.PageMaster, loop: asyncio.AbstractEventLoop,
-            settings: tke.VariableDict, width=500, height=500, highlight=None,
+            settings: VariableDict, width=500, height=500, highlight=None,
             background="white", **kwargs
     ):
         """Base Constructor. Should not have to be rewritten by subclasses."""
@@ -970,7 +970,7 @@ class ImageContainer(tke.PageBase):
 
 
 class SelectionPage(tke.PageBase):
-    def __init__(self, master: tke.PageMaster, settings: tke.VariableDict, **kwargs):
+    def __init__(self, master: tke.PageMaster, settings: VariableDict, **kwargs):
         super(SelectionPage, self).__init__(master, **kwargs)
 
         self.settings = settings
