@@ -200,15 +200,12 @@ class Output(ScrolledText):
             self, *text: Any, sep: str = " ",
             end: str = "\n"
     ) -> Block:
-        # shorthands
-        count = self.block_count
-
         # join text
         con_text = str(sep).join(map(str, text)) + str(end)
 
         # create block
         index = Index(self.index("insert"))
-        block = Block(self, f"block{count}", index, con_text)
+        block = Block(self, f"block{self.block_count}", index, con_text)
 
         # increment block count
         self.block_count += 1
