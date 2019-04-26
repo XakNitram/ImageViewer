@@ -743,6 +743,26 @@ class ImageContainer(tke.PageBase):
                 await asyncio.sleep(delay)
             await asyncio.sleep(0)
 
+    async def new_show(self, index: int = 0, rotate: int = 0):
+        name = self.get_image_path(index)
+
+        is_current = index == self.current_index
+        has_changed = self.current_image_unedited is None
+
+        if not is_current or has_changed:
+            if name is None:
+                self.canvas.delete("text")
+                return
+
+            try:
+                image = Image.open(name)
+                self.current_image_unedited = image
+            except FileNotFoundError:
+                return
+        else:
+            # this no longer works with the animation system
+            image = self.current_image_unedited
+
     async def play_animation(self, animation: Animation):
         while True:
             for i in range(animation.frame_count):
