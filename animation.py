@@ -39,12 +39,12 @@ class Animation(list, List[PhotoImage]):
         # used for faster loading
         self.unedited: Image.Image = None
 
-    def load(self, filename: str, rotation: int, loop: asyncio.AbstractEventLoop = None):
+    def start_load(self, filename: str, rotation: int, loop: asyncio.AbstractEventLoop = None):
         if loop is None:
             loop = asyncio.get_event_loop()
-        loop.create_task(self.loader(filename, rotation, loop))
+        loop.create_task(self.load(filename, rotation, loop))
 
-    async def loader(self, filename: str, rotation: int, loop: asyncio.AbstractEventLoop):
+    async def load(self, filename: str, rotation: int, loop: asyncio.AbstractEventLoop):
         # ****** Load Image ******
         if self.unedited is None:
             image: Image.Image = await loop.run_in_executor(None, Image.open, filename)

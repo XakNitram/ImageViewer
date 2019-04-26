@@ -204,7 +204,7 @@ class ImageContainer(tke.PageBase):
         if os.path.exists(loading_gif_name):
             self.use_gif_for_loading = True
             cache = Animation(canvas)
-            cache.load(
+            cache.start_load(
                 loading_gif_name,
                 0, self.loop
             )
