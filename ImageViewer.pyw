@@ -16,7 +16,7 @@ import os
 from PIL import Image
 from PIL import ImageFile
 from PIL.ImageTk import PhotoImage
-from sizeof import total_size
+from cache import Cache
 
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -173,46 +173,6 @@ class Animation(list, List[PhotoImage]):
 
             # suspend
             await asyncio.sleep(0)
-
-
-class Cache(OrderedDict, Dict[Hashable, _VT]):
-    """"""
-
-    __slots__ = ("max_size", "default_factory")
-
-    def __init__(self, max_size: int, default_factory: type = None, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.max_size = max_size
-        self.default_factory = default_factory
-
-    def _cull(self):
-
-        if total_size(self) > self.max_size and len(self) > 1:
-            oldest = next(iter(self))
-            del self[oldest]
-
-    def __setitem__(self, key: Hashable, value: _VT):
-        super().__setitem__(key, value)
-        self._cull()
-
-    def __getitem__(self, key: Hashable):
-        try:
-            value = super().__getitem__(key)
-            self.move_to_end(key)
-        except KeyError:
-            if self.default_factory is None:
-                raise
-            else:
-                value = self.default_factory()
-                self[key] = value
-
-        self._cull()
-
-        return value
-
-    def update(self, __m: Mapping[Hashable, _VT], **kwargs: _VT):
-        super().update(__m, **kwargs)
-        self._cull()
 
 
 class AskYesNo(tk.Toplevel):

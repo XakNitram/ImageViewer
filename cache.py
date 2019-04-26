@@ -1,16 +1,16 @@
-"""
-I take no credit for this code. It was found on the internet.
-I may have added some amount to this, I can't remember.
-"""
-
+from typing import Dict, Hashable, TypeVar, Mapping, Callable
+from collections import OrderedDict
 from sys import getsizeof, stderr
-from typing import Dict, Callable
 from itertools import chain
 from collections import deque
 try:
     from reprlib import repr
 except ImportError:
     pass
+
+
+# ****** Types ******
+_VT = TypeVar("_VT")
 
 
 def total_size(o, handlers={}, verbose=False):
@@ -58,3 +58,41 @@ def total_size(o, handlers={}, verbose=False):
         return s
 
     return sizeof(o)
+
+
+class Cache(OrderedDict, Dict[Hashable, _VT]):
+    __slots__ = ("max_size", "default_factory")
+
+    def __init__(self, max_size: int, default_factory: type = None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.max_size = max_size
+        self.default_factory = default_factory
+
+    def _cull(self):
+
+        if total_size(self) > self.max_size and len(self) > 1:
+            oldest = next(iter(self))
+            del self[oldest]
+
+    def __setitem__(self, key: Hashable, value: _VT):
+        super().__setitem__(key, value)
+        self._cull()
+
+    def __getitem__(self, key: Hashable):
+        try:
+            value = super().__getitem__(key)
+            self.move_to_end(key)
+        except KeyError:
+            if self.default_factory is None:
+                raise
+            else:
+                value = self.default_factory()
+                self[key] = value
+
+        self._cull()
+
+        return value
+
+    def update(self, __m: Mapping[Hashable, _VT], **kwargs: _VT):
+        super().update(__m, **kwargs)
+        self._cull()
