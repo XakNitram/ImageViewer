@@ -116,6 +116,7 @@ def askyesno(master, message: str = "", title: str = "", ) -> bool:
 
 class ImageContainer(tke.PageBase):
     """Page that displays images in a canvas.
+    Implements some default functionality.
 
     Relies on the following variables to be
     defined in a VariableDict object:
