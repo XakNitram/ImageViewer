@@ -12,6 +12,71 @@ from math import ceil
 from itertools import count
 
 
+class Static:
+    def __init__(self, canvas: tk.Canvas):
+        super().__init__()
+
+        self.image: PhotoImage = None
+
+        # ****** Canvas Information ******
+        self.canvas = canvas
+        self.height = canvas.winfo_height()
+        self.width = canvas.winfo_width()
+
+        # ****** Unedited Image ******
+        self.unedited: Image.Image = None
+
+    def reload(self):
+        self.width = self.canvas.winfo_width()
+        self.height = self.canvas.winfo_height()
+
+    def start_load(self, filename: str, rotation: int, loop: asyncio.AbstractEventLoop = None):
+        if loop is None:
+            loop = asyncio.get_event_loop()
+        loop.create_task(self.load(filename, rotation, loop))
+
+    async def load(self, filename: str, rotation: int, loop: asyncio.AbstractEventLoop):
+        # ****** Load Image ******
+        if self.unedited is None:
+            image: Image.Image = await loop.run_in_executor(None, Image.open, filename)
+            self.unedited = image
+        else:
+            image = self.unedited
+
+        # ****** Aspect Ratio Work ******
+        w, h = image.size
+        ratio = w / h
+
+        if w > self.width or h > self.height:
+            if w >= h:
+                nw, nh = self.width, ceil(self.width / ratio)
+
+                if nh > self.height:
+                    nw, nh = ceil(self.height * ratio), self.height
+            else:
+                nw, nh = ceil(self.height * ratio), self.height
+
+                if nw > self.width:
+                    nw, nh = self.width, ceil(self.width / ratio)
+            w, h = nw, nh
+
+        # rotate the frame
+        if rotation != 0:
+            frame = await loop.run_in_executor(
+                None, lambda: frame.rotate(-90 * rotation, expand=1)
+            )
+
+        # resize the frame to fit within the canvas
+        frame = await loop.run_in_executor(
+            None, lambda: frame.resize((w, h), Image.BILINEAR)
+        )
+
+        # convert the frame to the tkinter format
+        self.image = PhotoImage(
+            image=frame, master=self.canvas
+        )
+
+
 class Animation(list, List[PhotoImage]):
     __slots__ = (
         "finished_loading", "delays", "frame_count",
@@ -38,6 +103,16 @@ class Animation(list, List[PhotoImage]):
         # ****** Unedited Gif ******
         # used for faster loading
         self.unedited: Image.Image = None
+
+    def reload(self):
+        self.clear()
+        self.delays.clear()
+
+        self.width = self.canvas.winfo_width()
+        self.height = self.canvas.winfo_height()
+
+        self.frame_count = 1
+        self.finished_loading = False
 
     def start_load(self, filename: str, rotation: int, loop: asyncio.AbstractEventLoop = None):
         if loop is None:

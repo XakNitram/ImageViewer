@@ -1,6 +1,6 @@
 # ****** stdlib imports ******
 from typing import (
-    List, Dict,
+    List, Dict, Union,
     Optional, Tuple
 )
 from itertools import count
@@ -19,7 +19,7 @@ from tkexpanded.variables import VariableDict
 from tkinter.filedialog import asksaveasfilename
 from tkinter import ttk
 import tkinter as tk
-from animation import Animation
+from animation import Animation, Static
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -179,9 +179,9 @@ class ImageContainer(tke.PageBase):
         self.play_tasks: Dict[str, asyncio.Task] = {}
         self.loading_task: asyncio.Task = None
 
-        self.current_image: PhotoImage = None
+        self.current_image: Union[Static, Animation] = None
         self.current_image_edited: Image.Image = None
-        self.current_image_unedited: Image.Image = None
+        self.current_image_unedited: Union[Static, Animation] = None
 
         # list of image names to load
         self.images: List[str] = []
@@ -727,8 +727,6 @@ class ImageContainer(tke.PageBase):
             self.play_tasks["show_regular"] = self.loop.create_task(task)
 
     def canvas_show_image(self, image: PhotoImage):
-        self.current_image = image
-        # self.canvas.itemconfig("text", image=image)
         self.canvas.delete("text")
         self.canvas.create_image(
             self.width // 2, self.height // 2,
