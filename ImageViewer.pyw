@@ -6,11 +6,10 @@ from tkexpanded.variables import ObjectVar, VariableDict
 from time import time
 from math import ceil
 from typing import (
-    List, Optional, Tuple, ClassVar,
-    Dict, TypeVar, Hashable, Mapping,
+    List, Optional, Tuple,
+    ClassVar, Dict, TypeVar
 )
 from itertools import count
-from collections import OrderedDict
 import asyncio
 import os
 from PIL import Image
