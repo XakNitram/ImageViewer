@@ -4,7 +4,8 @@ from typing import (
 )
 from tkinter import Misc, EventType, TclError
 from tkinter.scrolledtext import ScrolledText
-from re import sub
+from functools import singledispatch
+from re import sub, escape
 
 
 # ****** Messageboard ******
@@ -171,6 +172,15 @@ class Block:
             # no need to unset the mark.
             pass
 
+    def __repr__(self):
+        window = self.window
+        return "{}: {} to {} '{}'".format(
+            self.__class__.__name__,
+            window.index(self.start),
+            window.index(self.end),
+            self.text.strip("\n\t\r")
+        )
+
 
 class Output(ScrolledText):
     def __init__(self, master: Misc = None, **kwargs) -> None:
@@ -256,8 +266,9 @@ class Output(ScrolledText):
         self.display(text, sep="", end="")
 
 
+@singledispatch
 def display(
-        stream: Hashable, *text: Any, end: str = '\n',
+        stream, *text: Any, end: str = '\n',
         sep: str = ' '
 ) -> Optional[Block]:
     display_stream = Streams.get(stream)
@@ -268,3 +279,47 @@ def display(
         *text, end=end, sep=sep
     )
     return block
+
+
+# handle multiple streams
+@display.register(list)
+@display.register(tuple)
+def _(streams, *text: Any, end: str = "\n", sep: str = " ") -> Tuple[Optional[Block]]:
+    blocks = []
+    for stream in streams:
+        output = Streams.get(stream)
+        if output is None:
+            blocks.append(None)
+            continue
+
+        block = output.display(
+            *text, end=end, sep=sep
+        )
+        blocks.append(block)
+    return tuple(blocks)
+
+
+if __name__ == '__main__':
+    import tkinter as tk
+    from itertools import compress
+
+    _root = tk.Tk()
+
+    _kwargs = dict()
+    _kwargs.update(width=20, height=5)
+
+    _out1 = Output(_root, **_kwargs)
+    _out1.pack()
+
+    _out2 = Output(_root, **_kwargs)
+    _out2.pack()
+
+    Streams["out1"] = _out1
+    Streams["out2"] = _out2
+
+    _blocks: Tuple[Optional[Block]] = display(["out1", "out2", "out3"], "this")
+    for _block in compress(_blocks, [blk is not None for blk in _blocks]):
+        _block.update("this2\nthis")
+        print(_block)
+    display("out1", "this")
+    _root.mainloop()
