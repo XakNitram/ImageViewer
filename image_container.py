@@ -616,11 +616,11 @@ class ImageContainer(tke.PageBase):
             cache = Animation(self.canvas)
             self.gif_cache[name] = cache
 
-        if cache.finished_loading:
+        if cache.loaded:
             frames = cache
         else:
             frames = await self.load_gif(image, cache, name, rotate)
-            self.gif_cache[name].finished_loading = True
+            self.gif_cache[name].loaded = True
         await self.repeat_gif(frames, delay)
 
     async def show_gif_concurrent(self, image, name, rotate):
@@ -667,7 +667,7 @@ class ImageContainer(tke.PageBase):
             try:
                 image.seek(i + 1)
             except EOFError:
-                self.gif_cache[name].finished_loading = True
+                self.gif_cache[name].loaded = True
                 break
 
             tkimage = await self.loop.run_in_executor(None, image.convert, "RGBA")
