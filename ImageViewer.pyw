@@ -22,7 +22,7 @@ def resource_path(rel):
     )
 
 
-class ImageViewerApp(tke.ApplicationBase):
+class ImageViewerApp(tke.SimpleApplication):
     globals = {
         "source": "",
         "reource_path": resource_path("")
@@ -30,7 +30,7 @@ class ImageViewerApp(tke.ApplicationBase):
 
     def __init__(self, loop):
         super(ImageViewerApp, self).__init__(
-            loop, title="Images", icon="ImageViewer.ico"
+            loop=loop, title="Images", icon="ImageViewer.ico"
         )
 
         # self.resizable(False, False)
@@ -83,7 +83,7 @@ class ImageViewerApp(tke.ApplicationBase):
         self.pages.show("selection")
 
 
-class SelectionPage(tke.PageBase):
+class SelectionPage(tke.SimplePage):
     def __init__(self, master: tke.PageMaster, settings: VariableDict, **kwargs):
         super(SelectionPage, self).__init__(master, **kwargs)
 

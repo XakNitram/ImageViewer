@@ -115,7 +115,7 @@ def askyesno(master, message: str = "", title: str = "", ) -> bool:
     return dialog.response
 
 
-class ImageContainer(tke.PageBase):
+class ImageContainer(tke.SimplePage):
     """Page that displays images in a canvas.
     Implements some default functionality.
 
@@ -215,7 +215,7 @@ class ImageContainer(tke.PageBase):
         self.last_configure = time()
 
         # allow other pages to update the source
-        self.command_add("<<UpdateSource>>", self.update_source)
+        self.add_command("<<UpdateSource>>", self.update_source)
         self.current_source = settings.get_true("source")
 
         # ****** Configuring ******
