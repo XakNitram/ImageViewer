@@ -267,5 +267,6 @@ class VariableDict(dict, Dict[str, Variable]):
         with open(file, "w") as config_file:
             config.write(config_file)
 
-    def get_true(self, key) -> Union[str, float, int, bool]:
-        return self[key].get()
+    def get_true(self, key, default=None) -> Union[str, float, int, bool]:
+        variable = self.get(key, None)
+        return variable.get() if variable is not None else default

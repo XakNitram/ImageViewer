@@ -142,19 +142,13 @@ class ImageContainer(tke.PageBase):
         self.settings = settings
         self.root: tk.Tk = settings.get_true("root")
 
-        try:
-            self.resource_path = settings.get_true(
-                "resource_path"
-            )
-        except KeyError:
-            self.resource_path = ""
+        self.resource_path = settings.get_true(
+            "resource_path", ""
+        )
 
-        try:
-            self.loading_gif_name = settings.get_true(
-                "loading_image"
-            )
-        except KeyError:
-            self.loading_gif_name = "Loading.gif"
+        self.loading_gif_name = settings.get_true(
+            "loading_image", ""
+        )
 
         self.height = height
         self.width = width
