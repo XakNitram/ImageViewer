@@ -1,1 +1,2 @@
-tkexpanded
+git+https://github.com/XakNitram/tkexpanded
+pillow
