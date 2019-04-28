@@ -9,6 +9,7 @@ import asyncio
 import logging
 import os
 from sys import stderr
+from contextlib import suppress
 
 # ****** Import Setup ******
 root_logger = logging.getLogger(__name__)
@@ -433,11 +434,8 @@ class ApplicationBase(tk.Tk):
         self.toggle()
         self.title(title)
 
-        try:
+        with suppress(tk.TclError):
             self.iconbitmap(icon)
-        except tk.TclError:
-            root_logger.warning("Icon file not found. Using default tkinter icon.")
-            pass
 
     def destroy(self):
         self.toggle()
@@ -445,14 +443,18 @@ class ApplicationBase(tk.Tk):
         if hasattr(self, "exit"):
             self.exit()
 
+        tasks = asyncio.Task.all_tasks()
+
         async def stop_mainloop():
             nonlocal self
+
+            for task in tasks:
+                root_logger.debug("Stopping " + str(task))
+                task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
+
             self.loop.stop()
             super(ApplicationBase, self).destroy()
-
-        for task in asyncio.Task.all_tasks():
-            root_logger.debug("Stopping " + str(task))
-            task.cancel()
         asyncio.ensure_future(stop_mainloop(), loop=self.loop)
 
     __destroy = destroy
