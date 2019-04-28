@@ -3,6 +3,7 @@ from typing import (
     List, Dict, Union,
     Optional, Tuple
 )
+from functools import partial
 from itertools import count
 from math import ceil
 from time import time
@@ -520,11 +521,11 @@ class ImageContainer(tke.PageBase):
 
             if rotate != 0:
                 frame = await self.loop.run_in_executor(
-                    None, lambda: frame.rotate(-90 * rotate, expand=1)
+                    None, partial(frame.rotate, -90 * rotate, expand=1)
                 )
 
             frame = await self.loop.run_in_executor(
-                None, lambda: frame.resize((w, h), Image.BILINEAR)
+                None, partial(frame.resize, (w, h), Image.BICUBIC)
             )
 
             photoimage = PhotoImage(
@@ -612,8 +613,6 @@ class ImageContainer(tke.PageBase):
             else:
                 loading_task.cancel()
                 # await asyncio.gather(loading_task)
-
-        # gif cache culling
 
         return cache
 
@@ -768,7 +767,7 @@ class ImageContainer(tke.PageBase):
 
     async def play_animation(self, animation: Animation):
         while True:
-            for i in range(animation.frame_count):
-                self.canvas_show_image(animation[i])
-                await asyncio.sleep(animation.delays[i])
+            for frame, delay in zip(animation, animation.delays):
+                self.canvas_show_image(frame)
+                await asyncio.sleep(delay)
             await asyncio.sleep(0)
