@@ -9,7 +9,7 @@ import os
 
 
 tk._support_default_root = 0
-# tke.enable_logging(logging.DEBUG)
+tke.enable_logging(2)
 
 
 def resource_path(rel):
@@ -24,7 +24,8 @@ def resource_path(rel):
 
 class ImageViewerApp(tke.ApplicationBase):
     globals = {
-        "source": ""
+        "source": "",
+        "reource_path": resource_path("")
     }
 
     def __init__(self, loop):

@@ -739,7 +739,7 @@ class ImageContainer(tke.PageBase):
                 await asyncio.sleep(delay)
             await asyncio.sleep(0)
 
-    async def new_show(self, index: int = 0, rotate: int = 0):
+    def new_show(self, index: int = 0, rotate: int = 0):
         name = self.get_image_path(index)
 
         is_current = index == self.current_index
@@ -747,10 +747,12 @@ class ImageContainer(tke.PageBase):
 
         if not is_current or has_changed:
             if name is None:
+                # no more images
                 self.canvas.delete("text")
                 return
 
             try:
+                # show a new image
                 image = Image.open(name)
                 self.current_image_unedited = image
             except FileNotFoundError:
