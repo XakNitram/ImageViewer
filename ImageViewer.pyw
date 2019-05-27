@@ -83,6 +83,7 @@ class ImageViewerApp(tke.SimpleApplication):
         self.pages.show("selection")
 
 
+# simple selection page
 class SelectionPage(tke.SimplePage):
     def __init__(self, master: tke.PageMaster, settings: VariableDict, **kwargs):
         super(SelectionPage, self).__init__(master, **kwargs)
@@ -124,5 +125,4 @@ class SelectionPage(tke.SimplePage):
 
 
 if __name__ == '__main__':
-    app = ImageViewerApp(asyncio.get_event_loop())
-    app.run()
+    ImageViewerApp(asyncio.get_event_loop()).run()
